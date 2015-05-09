@@ -2,6 +2,10 @@
 import sys
 import math
 import rospy
+
+import roslib; roslib.load_manifest('lidar_translator')
+
+from lidar_translator.msg import *
 from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String, Float64
@@ -25,9 +29,11 @@ class LidarTranslator:
 		self.robot_width = 12
 
 		# ROS initialization
-		self.pub = rospy.Publisher('closest_obj', Float64)
-		self.pub2 = rospy.Publisher('lidar_status', String)
-		self.pub3 = rospy.Publisher('lidar_theta', Float64)
+		# self.pub = rospy.Publisher('closest_obj', Float64)
+		# self.pub2 = rospy.Publisher('lidar_status', String)
+		# self.pub3 = rospy.Publisher('lidar_theta', Float64)
+		self.pub = rospy.Publisher('lidar_output', lidar_output)
+
 		rospy.Subscriber("scan", LaserScan, self.callback)
 
 	def callback(self, data):

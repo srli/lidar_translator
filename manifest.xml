@@ -1,0 +1,19 @@
+<package>
+  <description brief="lidar_translator">
+
+     lidar_translator
+
+  </description>
+  <author>sfeng</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/lidar_translator</url>
+
+  <depend package="rospy"/>
+  <depend package="roscpp"/>
+  <depend package="roslib"/>
+  <depend package="sensor_msgs"/>
+  <depend package="message_generation"/>
+
+</package>
+
