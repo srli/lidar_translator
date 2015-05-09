@@ -11,7 +11,8 @@ from sensor_msgs.msg import LaserScan
 from std_msgs.msg import String, Float64
 
 def callback(data):
-	print data.closest_obj
+	print "Closest object found in inches ", data.closest_obj
+	print "Angle to forward wall ", data.wall_angle
 
 def listener():
     rospy.init_node('lidar_listener_node', anonymous=True)
