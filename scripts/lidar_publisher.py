@@ -63,6 +63,7 @@ class LidarTranslator:
 
 		msg.wall_angle = theta
 		msg.all_obj = obstacles[0]
+		msg.wall_found = obstacles[2]
 		#self.pub3.publish(theta)
 
 		# Publishing is slowed down to ease human readability
@@ -114,6 +115,8 @@ class LidarTranslator:
 		and classifies them as cart, human, or wall"""
 		obstacles_pub = []
 		obstacles = []
+		wall_found = False
+
 		for index_range in index_ranges:
 			start_index = index_range[0]
 			end_index = index_range[1]
@@ -159,17 +162,18 @@ class LidarTranslator:
 				msg_obj.x = [xs]
 				msg_obj.y = [ys]
 				msg_obj.object_type = obj_type
+				wall_found = True
 
 				obstacles_pub.append(msg_obj)
 				obstacles.append(Obstacle(xs, ys, radius, obj_type))
 			else:
-				msg_obj.x = x
-				msg_obj.y = y
+				msg_obj.x = [x]
+				msg_obj.y = [y]
 				msg_obj.object_type = obj_type
 				obstacles_pub.append(msg_obj)
 				obstacles.append(Obstacle([x], [y], radius, obj_type))
 
-		return [obstacles_pub, obstacles]
+		return [obstacles_pub, obstacles, wall_found]
 
 	# overestimates distances of under 6 inches
 	def closest_forward_obstacle(self, obstacles):
