@@ -1,5 +1,5 @@
 Header Header
 
-int32 distance
-int32 theta
+float64 x
+float64 y
 string object_type

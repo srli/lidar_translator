@@ -37,8 +37,8 @@ class LidarTranslator:
 		rospy.Subscriber("scan", LaserScan, self.callback)
 
 	def callback(self, data):
-		# print data.ranges[500]
-		# print len(data.ranges)
+		msg = lidar_output()
+
 		data.ranges = [self.inch_per_meter * r for r in data.ranges]
 		data.ranges.reverse()
 
@@ -54,17 +54,23 @@ class LidarTranslator:
 		index_ranges = self.obj_angles(data, min_index, max_index)
 		obstacles = self.ranges_to_obstacles(data, index_ranges)
 		min_dist, min_obs = self.closest_forward_obstacle(obstacles)
-		self.pub.publish(min_dist)
+
+
+		#self.pub.publish(min_dist)
+		msg.closest_obj = min_dist
 
 		theta = self.forward_wall_angle(obstacles)
-		self.pub3.publish(theta)
+
+		msg.wall_angle = theta
+		msg.all_obj = obstacles[0]
+		#self.pub3.publish(theta)
 
 		# Publishing is slowed down to ease human readability
 		if self.current_interval < self.publish_interval:
 			self.current_interval += 1
 		else:
 			self.current_interval = 0
-			self.pub2.publish(str(obstacles))
+			#self.pub2.publish(str(obstacles))
 
 		if self.rendered == False:
 			self.rendered = True
@@ -74,6 +80,7 @@ class LidarTranslator:
 			print index_ranges
 			print obstacles
 			print min_dist, min_obs
+		self.pub.publish(msg)
 
 	def obj_angles(self, data, min_index, max_index):
 		index_ranges = []
@@ -105,6 +112,7 @@ class LidarTranslator:
 	def ranges_to_obstacles(self, data, index_ranges):
 		"""Translates each index_range to x,y coordinates
 		and classifies them as cart, human, or wall"""
+		obstacles_pub = []
 		obstacles = []
 		for index_range in index_ranges:
 			start_index = index_range[0]
@@ -142,13 +150,26 @@ class LidarTranslator:
 			xs = [left_x, right_x]
 			ys = [left_y, right_y]
 
+			msg_obj = lidar_obj()
+
+
+
 			if obj_type == "wall":
 				radius = 1 #1 inch buffer
+				msg_obj.x = [xs]
+				msg_obj.y = [ys]
+				msg_obj.object_type = obj_type
+
+				obstacles_pub.append(msg_obj)
 				obstacles.append(Obstacle(xs, ys, radius, obj_type))
 			else:
+				msg_obj.x = x
+				msg_obj.y = y
+				msg_obj.object_type = obj_type
+				obstacles_pub.append(msg_obj)
 				obstacles.append(Obstacle([x], [y], radius, obj_type))
 
-		return obstacles
+		return [obstacles_pub, obstacles]
 
 	# overestimates distances of under 6 inches
 	def closest_forward_obstacle(self, obstacles):
@@ -159,7 +180,7 @@ class LidarTranslator:
 		"""
 		min_obs = None
 		min_dist = 1000
-		for obs in obstacles:
+		for obs in obstacles[1]:
 			if (min(obs.xs)-obs.radius < self.robot_width/2 and
 				max(obs.xs)+obs.radius > -self.robot_width/2):
 				obs_dist = min(obs.ys)
@@ -179,7 +200,7 @@ class LidarTranslator:
 			obstacles: list of Obstacle objects
 		"""
 		angle = 0 #answer in case of error
-		for obs in obstacles:
+		for obs in obstacles[1]:
 			if obs.obs_type == "wall":
 				if (min(obs.xs)-obs.radius < self.robot_width/2 and
 					max(obs.xs)+obs.radius > -self.robot_width/2):
